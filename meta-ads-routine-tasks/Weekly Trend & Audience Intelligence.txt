@@ -1,0 +1,84 @@
+## INPUT
+- Campaign-level performance data, two queries: one for the last 7 days, one for the prior 7 days (used as baseline)
+- Audience targeting details
+
+## PROCESS
+
+### SECTION 1 — Trend Analysis
+
+#### Step 1.1 — Baseline Calculation
+Using the two insight calls above, calculate the 7-day rolling average for each campaign. Use the prior 7-day period as the baseline to compare against the most recent 7 days.
+
+#### Step 1.2 — Flag Declining Campaigns
+Flag campaigns where ANY of the following is true for 3+ consecutive days:
+- CPA rose more than {CPA_RISE_PCT}% vs the prior 7-day rolling average AND current CPA exceeds 1.5× TARGET_CPA (absolute floor safeguard)
+- CVR dropped more than {CVR_DROP_PCT}% week-over-week
+- ROAS declined more than {ROAS_DECLINE_PCT}% vs prior period (only if revenue data available)
+
+(Do not verify whether creative or audience was changed — apply the metric condition and flag it.)
+
+#### Step 1.3 — Root Cause Classification
+For each flagged campaign, classify the most likely root cause based on available metrics:
+
+| Observed pattern | Suspected cause |
+|------------------|-----------------|
+| Frequency rising + CTR declining | creative_fatigue |
+| Reach plateaued + frequency high | audience_saturation |
+| CPM rising + no CTR improvement | auction_competition |
+| Cannot explain with above patterns | external_factor |
+
+When classifying, state the evidence clearly (e.g., "CTR dropped from X% to Y% over 7 days while frequency climbed from Z to W, suggesting creative_fatigue"). Do not present the classification as a definitive fact — frame it as the most likely explanation given the data.
+
+#### Step 1.4 — Output Trend Report
+For each flagged campaign output:
+- Campaign ID
+- Metric trend line (daily values for CPA, CVR over the 7-day window; ROAS included if revenue data is available)
+- Days in decline
+- Suspected root cause with supporting evidence
+- Recommended early intervention
+
+### SECTION 2 — Audience Overlap Analysis
+
+#### Step 2.1 — Overlap Risk Assessment
+Meta does not expose a direct audience overlap percentage via API. Use targeting data (age/gender/location) to identify overlap risk by comparing targeting parameters across active ad sets. Flag pairs where targeting parameters indicate likely significant overlap and no detected exclusion logic exists.
+
+This is an approximate assessment — exact overlap % is not available via current tools.
+
+#### Step 2.2 — Flag and Quantify
+For each flagged pair output:
+- Ad set pair IDs
+- Overlap risk level (High / Medium / Low, based on targeting similarity)
+- Estimated budget waste from internal competition:
+  - Low — less than 5% of combined spend
+  - Medium — 5–15% of combined spend
+  - High — more than 15% of combined spend
+- Recommended fix: `add_exclusion` / `consolidate` / `adjust_targeting`
+
+## OUTPUT
+
+```
+## 📈 SECTION 1: TREND ANALYSIS
+
+| Campaign ID | Metric | Daily Values (7d) | Days in Decline | Root Cause | Recommended Intervention |
+|-------------|--------|-------------------|----------------|------------|-------------------------|
+
+If no campaigns flagged: `✅ No campaigns showing significant decline trends this week.`
+
+## 🔍 SECTION 2: AUDIENCE OVERLAP
+
+| Ad Set A | Ad Set B | Overlap Risk | Est. Budget Waste | Recommended Fix |
+|----------|----------|--------------|-------------------|-----------------|
+
+If only one campaign with one ad set active: `✅ No overlap risk — single ad set structure.`
+If targeting data is insufficient to assess overlap: `⚠️ Cannot assess overlap — targeting data not sufficient via current tools. Manual review recommended.`
+```
+
+## GUARD
+- If fewer than 7 days of historical data available: output `⚠️ Insufficient historical data for trend analysis (need 14 days minimum). Output available data only.`
+- Do not execute any changes automatically regardless of findings. Output recommendations only.
+
+## CONFIG (user-configurable)
+- CPA_RISE_PCT: 10
+- CVR_DROP_PCT: 15
+- ROAS_DECLINE_PCT: 10 (only applicable if revenue data available)
+- TARGET_CPA (required): user-defined target CPA used for absolute floor safeguard

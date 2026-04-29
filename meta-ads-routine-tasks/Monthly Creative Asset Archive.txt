@@ -1,0 +1,56 @@
+## INPUT
+- Last 90 days of ad performance data
+- Top 20% performers → visual element analysis
+
+## STEP 1 — Classify & Flag
+For each creative active in the past 90 days, calculate:
+- Lifetime CPA (total spend / total conversions)
+- Total spend
+
+Tag each creative by tier:
+- **Top 20%**: CPA in top 20% (lowest cost per result) → `TIER_TOP`, document winning attributes
+- **Middle 60%**: all others → `TIER_MIDDLE`
+- **Bottom 20%**: CPA in bottom 20% OR zero conversions with significant spend → `TIER_BOTTOM`, flag for archival
+
+Also flag any duplicate creatives: same image/video + same copy + same CTA across multiple placements.
+
+## STEP 2 — Winning Creative Analysis
+For each top performer, retrieve creative assets (image URL or video thumbnail via ad ID). Then analyze visual elements:
+- Hook type (first 3s of video or first frame of image)
+- Visual style (color palette, format, composition)
+- CTA type
+- Copy angle (headline and description themes)
+
+Analyze top performers only — skip middle and bottom tier. Limit to 5 creatives per execution (prioritize highest performers).
+
+## STEP 3 — Compile Creative Library Index
+Build the full index as a markdown table (see OUTPUT below). This serves as the creative library.
+
+## STEP 4 — Archive Log
+Produce a log of all assets flagged for archival this cycle: asset ID, reason archived, date.
+
+## OUTPUT
+
+## 📁 CREATIVE LIBRARY INDEX (90-day window)
+| Asset ID | Spend (90d) | CPA | Tier | Hook Type | Visual Style | CTA |
+|----------|-------------|-----|------|-----------|--------------|-----|
+
+## 🗑️ ARCHIVE LOG
+| Asset ID | Reason Archived | Date |
+|----------|----------------|------|
+
+## 🎯 CREATIVE DIRECTION SUMMARY (Top 20% patterns)
+| Attribute | Pattern |
+|-----------|---------|
+| Hook type | ... |
+| Visual style | ... |
+| CTA | ... |
+| Copy angle | ... |
+
+## GUARD
+- Fewer than 10 creatives in 90-day window → skip tier classification, output raw performance list only
+- An asset with no conversion data → classify based on spend and frequency only, tag as `insufficient_data`
+- Archival means pausing the ad that carries this creative — ad and creative are 1:1 bound, creative cannot be replaced or deleted independently
+- Archive list is for human review — requires confirmation before any pause action is taken
+- Duplicate detection: approximate — same image/video + same headline + same CTA
+- Never analyze more than 5 creatives per execution

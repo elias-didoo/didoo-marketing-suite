@@ -1,0 +1,49 @@
+## CONTEXT
+Extract a full performance report for all active ads from the previous period, and run a basic health check on the ad account.
+
+## PROCESS
+
+### Performance Data
+Pull performance metrics for every active ad. Include: campaign name, campaign ID, adset name, adset ID, ad name, ad ID, objective, currency, impressions, reach, frequency, clicks, spend, inline link CTR, CPM, CPC, results, and cost per result.
+
+Format numbers consistently: currency to 2 decimal places, percentages to 2 decimal places, everything else as plain integers.
+
+### Account Health Check
+Run the following checks and flag any issues:
+
+- **Account status**: check the account's status field — FAIL if value is 3 (UNSETTLED), 8 (PENDING_SETTLEMENT), or 9 (IN_GRACE_PERIOD); otherwise PASS. Also FAIL if the disable reason field is non-empty.
+- **Landing page**: verify the landing page is accessible via HTTP request → PASS if reachable, FAIL if not. (Skip this check if HTTP request capability is unavailable — mark as SKIPPED.)
+
+### Output
+Render all data as markdown tables inline in the message. Do not write to external files or sheets.
+
+---
+
+## OUTPUT
+
+If no active campaigns: `✅ No active campaigns yesterday. Data ledger empty.`
+
+Otherwise output:
+
+```
+## 📋 DATA LEDGER (yesterday)
+
+| Campaign | Campaign ID | Adset | Adset ID | Ad | Ad ID | Objective | Currency | Impressions | Reach | Frequency | Clicks | Spend | Inline Link CTR | CPM | CPC | Results | Cost/Result |
+|----------|-------------|-------|----------|----|-------|-----------|----------|-------------|-------|-----------|--------|-------|----------------|-----|-----|---------|-------------|
+
+> 📎 Showing first 50 rows — full data available on request.
+
+## 🏥 ACCOUNT HEALTH CHECK
+
+| Check Item | Status | Details |
+|------------|--------|---------|
+| Account status | FAIL / PASS | N ads affected: [ad names + status] |
+| Landing page | FAIL / PASS / SKIPPED | ... |
+```
+
+---
+
+## NOTES
+- If the landing page check fails, mark it as FAIL with reason "unreachable" — do not error out
+- If results data is unavailable for a campaign, show `N/A`
+- "Yesterday" applies to daily triggers; for weekly or monthly, substitute the corresponding period (e.g., "last 7 days" or "last month")

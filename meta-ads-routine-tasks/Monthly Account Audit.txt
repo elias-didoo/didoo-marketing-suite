@@ -1,0 +1,80 @@
+## INPUT
+- Campaign structure data (campaign/adset/ad list)
+- Campaign-level performance data, date range: last 30 days
+- Naming convention: see suggested pattern in Step 3
+
+## PROCESS
+
+### Step 1 — Zero-Spend Audit
+Flag for archival review any of the following that have had zero spend for 30+ consecutive days:
+- Campaigns
+- Ad sets
+- Ads
+
+### Step 2 — Structural Issues
+Check for:
+- **Overlapping targeting**: ad sets within the same campaign with identical or >80% similar age/gender/location targeting and no exclusion logic → flag as HIGH priority
+- **Duplicate audiences**: two or more ad sets targeting the same audience definition → flag as MEDIUM
+- **Deprecated creatives**: ads with delivery status paused or disabled → flag as MEDIUM
+- **Naming convention violations**: names that do not match the pattern in Step 3 → flag for rename recommendation
+
+### Step 3 — Naming Convention Recommendation
+Recommend all future names follow this structure:
+```
+[YYYY-MM-DD]_[Objective]_[Product]_[Audience]_[CreativeType]
+```
+Examples:
+- `2026-04-01_LEADS_SMB_SaaS_VideoAd`
+- `2026-04-15_TRAFFIC_FreeTrial_Retarget_StaticCarousel`
+
+### Step 4 — UTM and Tracking Verification
+For each active campaign, check if destination URLs contain UTM parameters. A properly tagged URL includes at least `utm_source` or `utm_medium`. Flag campaigns where UTMs are missing or incomplete.
+
+### Step 5 — Account Hygiene Score
+Score each account on a 0–100 scale:
+- Zero-spend entities (30+ days): -5 per entity
+- Targeting overlap: -10 per overlap pair
+- Missing UTMs: -5 per campaign
+- Naming violations: -2 per entity
+- Final score: `Account Hygiene Score: X/100`
+
+## OUTPUT
+
+```
+## 🗑️ ZERO-SPEND ENTITIES (flagged for archival review)
+
+| Entity Type | Entity ID | Entity Name | Days Zero-Spend | Archive Recommendation |
+|-------------|-----------|------------|-----------------|----------------------|
+
+## ⚠️ STRUCTURAL ISSUES
+
+| Issue Type | Entity Pair | Severity | Recommended Action |
+|------------|-------------|----------|-------------------|
+| Overlapping targeting | ... | HIGH | ... |
+| Duplicate audience | ... | MEDIUM | ... |
+| Deprecated creative | ... | MEDIUM | ... |
+| Naming violation | ... | LOW | ... |
+
+## 🏷️ NAMING CONVENTION RECOMMENDATIONS
+| Entity ID | Current Name | Recommended Name |
+|-----------|-------------|------------------|
+
+## 🔗 UTM/TRACKING ISSUES
+| Campaign ID | Issue | Recommended Fix |
+|-------------|-------|----------------|
+
+## 📊 ACCOUNT HYGIENE SCORE
+| Account | Score/100 | Top Issues |
+|---------|-----------|------------|
+
+## 🧹 CLEANUP LOG
+Items flagged for archival (requires human confirmation before any archival action is taken):
+- [list of entity IDs and names]
+```
+
+## GUARD
+- CLEANUP LOG is for human review — requires confirmation before any pause/archive action is taken
+- Duplicate audience detection: if targeting data is insufficient to confirm duplication, mark as `UNKNOWN — manual review required`
+- If no issues found: output `✅ Account structure is clean. No archival or structural issues detected.`
+- Naming convention: only recommend renames, do not auto-rename (requires human confirmation)
+- Output report in Markdown format directly.

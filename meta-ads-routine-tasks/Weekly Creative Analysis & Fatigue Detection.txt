@@ -1,0 +1,63 @@
+## INPUT
+- Last 7 days of ad performance data
+- Top 20% performers → visual element analysis
+
+## STEP 1 — Per-Ad Metrics
+CTR, CVR, CPA, Frequency, Spend share.
+
+(Thumbstop ratio and hold rate not available — skip.)
+
+## STEP 2 — Tier Classification
+Rank by CPA ascending (lower CPA = better):
+- Top 20%: recommend scaling, create 2–3 variations
+- Middle 60%: monitor, minor iterations only
+- Bottom 20%: recommend pausing, document failure reason
+
+## STEP 3 — Winning Creative Analysis
+For each top performer, retrieve creative assets and analyze:
+- Hook type (first 3s of video or first frame of image)
+- Visual style, CTA type, copy angle
+
+Analyze top performers only.
+
+## STEP 4 — Fatigue Detection
+Flag any ad where:
+- Frequency > 2.5 AND CTR declined > 15% vs prior week
+- OR Frequency > 3.0 regardless of CTR
+
+Estimate saturation: Low / Medium / High.
+
+## STEP 5 — Creative Brief
+Include:
+- Top performer breakdown (what's working and why)
+- Bottom performer autopsy
+- Fatigue alerts with saturation estimates
+- Specific creative requests (hook type, format, angle, CTA)
+
+## OUTPUT
+
+## 🎯 CREATIVE PERFORMANCE TIERS
+| Ad ID | Spend | Impressions | CTR | CVR | CPA | Frequency | Tier | Recommendation |
+
+## ⚠️ FATIGUE ALERTS
+| Ad ID | Frequency | CTR vs 7d Ago | Saturation | Recommended Action |
+
+## 🏆 WINNING PATTERNS
+| Attribute | Pattern |
+|-----------|---------|
+| Hook type | ... |
+| Visual style | ... |
+| CTA | ... |
+| Copy angle | ... |
+
+## 📝 CREATIVE BRIEF
+[Bulleted requests for new creative assets]
+
+## GUARD
+- Fewer than 5 active creatives → skip classification, output raw metrics only
+- No prior week data → skip CTR decline check, apply frequency threshold only
+- No active campaigns → ✅ No active creatives to analyze.
+- Never analyze more than 5 creatives per execution; prioritize top performers
+
+## CONFIG (defaults — adjust as needed)
+- Fatigue thresholds: freq > 2.5, CTR decline > 15%, absolute cap 3.0

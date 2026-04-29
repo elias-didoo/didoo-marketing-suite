@@ -1,0 +1,60 @@
+### Go ###
+# 构建产物
+/bin/
+/dist/
+/*.exe
+/*.dll
+/*.so
+/*.dylib
+/*.a
+/*.test
+
+# 测试相关
+/coverage.txt
+/coverage.html
+/profile.out
+
+# Go Modules 依赖目录（如果使用 vendor 模式）
+/vendor/
+
+### Logs ###
+# 日志文件
+/logging/
+*.log
+*.log.*
+
+### macOS ###
+# 系统文件
+.DS_Store
+.Trashes
+
+### IDE ###
+# JetBrains（Goland/IntelliJ）
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VSCode
+.vscode/
+
+# 通用编辑器文件
+*.swp
+*.swo
+*.sublime-*
+
+
+### AI 
+
+### PI Agent (Codex/Claude Code/Pi) ###
+# Agent temp/cache directories
+.pi/
+.codex/
+.claude/
+*.pi-temp*
+.tmp.agent*
+
+# Common agent cache patterns
+/.agent-cache/
+/.agent-logs/
+*.agent-log

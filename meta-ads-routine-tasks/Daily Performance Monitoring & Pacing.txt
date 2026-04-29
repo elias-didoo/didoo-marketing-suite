@@ -1,0 +1,75 @@
+## CONTEXT
+Monitor active campaigns for performance anomalies and budget pacing issues. Run this check daily, weekly, or monthly based on your configured schedule.
+
+## CONFIG
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Analysis Type | daily | How often this runs: daily, weekly, or monthly |
+| CPM Spike Alert | 30% | Flag if CPM exceeds 7-day average by this much |
+| CTR Drop Alert | 20% | Flag if CTR drops below 7-day average by this much |
+| CPA Breakeven | — | Alert if CPA exceeds this value |
+| Zero-Conv Spend Threshold | 2× daily budget | Flag if spend exceeds this with zero conversions |
+| Under-pace Threshold | 45% at 50% elapsed / 56% at 80% elapsed | Flag if expected spend not reached |
+| Over-pace Threshold | 110% | Flag if spend exceeds this vs expected |
+
+---
+
+## PROCESS
+
+### Learning Phase Check
+For each campaign, determine whether it is still in the learning phase:
+- Still learning: spend is less than 50× the daily budget AND it has been less than 7 days since launch
+- Exited learning: either condition has been met
+
+Learning-phase campaigns are excluded from CPA anomaly checks, but always included in pacing analysis.
+
+### Anomaly Detection
+Compare current performance against 7-day averages. Flag the following:
+
+- **CPM spike**: current CPM is elevated beyond the configured threshold vs its 7-day average
+- **CTR drop**: current CTR has declined beyond the configured threshold vs its 7-day average
+- **CPA above breakeven**: CPA has exceeded the breakeven threshold
+- **Zero-conversion overspend**: no conversions recorded and spend has exceeded the configured multiplier of daily budget
+
+### Budget Pacing
+For each campaign, calculate expected spend based on time elapsed and compare against actual spend.
+
+| Time Elapsed | Expected Spend | Flag if Under | Flag if Over |
+|---|---|---|---|
+| 50% of day | 50% of daily budget | < 45% = under-paced | > 110% = over-paced |
+| 80% of day | 80% of daily budget | < 56% = under-paced | > 110% = over-paced |
+
+### Severity
+- **Critical**: multiple anomalies detected, or zero-conversion overspend
+- **Warning**: a single anomaly
+
+---
+
+## OUTPUT
+
+If no active campaigns: `✅ No active campaigns to analyze.`
+
+Otherwise output:
+
+```
+## 🚨 ALERT SUMMARY
+
+| # | Entity | Metric | Current | vs 7-Day Avg | Severity | Cause | Action |
+|---|--------|--------|---------|--------------|----------|-------|--------|
+
+## 📊 PACING STATUS
+
+| Campaign | Budget | Hours Elapsed | Expected | Actual | Pace% | Status |
+|----------|--------|---------------|----------|--------|-------|--------|
+```
+
+- **Critical**: show recommended action only
+- **Warning**: include suspected cause and recommended action
+
+---
+
+## NOTES
+- CPA checks are skipped when conversion data is unavailable — report `CPA: N/A`
+- Always include learning-phase campaigns in pacing analysis
+- If data is insufficient to evaluate any metric, skip that check without flagging

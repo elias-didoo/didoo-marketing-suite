@@ -1,0 +1,64 @@
+## INPUT
+- Campaign-level performance data, date range: last 7 days
+- Campaign budget and configuration data
+- Learning phase status: determined by campaign age (see GUARD)
+
+## CONFIG (user-configurable)
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `TARGET_CPA` | — | User-defined target cost per acquisition |
+| `FREQ_THRESHOLD` | `3` | Alert if frequency exceeds this |
+| `CTR_DECLINE_PCT` | `15` | Alert if CTR drops below 7-day avg by this % |
+| `CPA_RISE_PCT` | `20` | Alert if CPA rises above 7-day avg by this % |
+| `ZERO_CONV_MULTIPLIER` | `2` | Shutdown trigger: spend > daily_budget × this with 0 conversions |
+| `SHUTDOWN_CPA_MULTIPLIER` | `2` | Shutdown if CPA exceeds this × TARGET_CPA for 3+ days |
+| `BUDGET_INCREASE_CPA_IMPROVEMENT` | `20%` | CPA must be this much below target to qualify for budget increase |
+
+---
+
+## PROCESS
+
+### Step 1 — Classify Each Campaign
+Evaluate all criteria below for each active campaign:
+
+**Shutdown criteria** (evaluate in this priority order):
+1. `Spend > daily_budget × ZERO_CONV_MULTIPLIER with 0 conversions` → flag as SHUTDOWN (regardless of age/learning phase)
+2. `CPA > SHUTDOWN_CPA_MULTIPLIER × TARGET_CPA for 3+ consecutive days AND campaign has exited learning phase AND active 7+ days` → flag as SHUTDOWN
+3. `Frequency > FREQ_THRESHOLD AND CTR declined > CTR_DECLINE_PCT% vs 7-day average AND CPA rose > CPA_RISE_PCT% vs 7-day average AND campaign has exited learning phase AND active 7+ days` → flag as SHUTDOWN
+
+**Budget increase criteria** (ALL must be met):
+- Campaign has exited learning phase AND active 7+ days
+- CPA below TARGET_CPA by > BUDGET_INCREASE_CPA_IMPROVEMENT for 3 consecutive days
+- Current spend > 80% of daily budget
+- Frequency < 2.5
+- Not flagged by any shutdown criterion above
+
+### Step 2 — Conflict Resolution
+If a campaign meets both shutdown AND budget increase criteria → suppress budget increase, output only shutdown recommendation.
+
+### Step 3 — Build Recommendation List
+For each recommendation output:
+- Item ID (auto-increment)
+- Campaign ID and name
+- Criteria met (which rule triggered)
+- Learning phase status (learning / exited)
+- Current spend and key metrics
+- Recommended action (pause / reduce budget / increase budget)
+
+## OUTPUT
+
+```
+## 📋 RECOMMENDATION LIST
+
+| # | Campaign ID | Campaign Name | Criteria Met | Learning Phase | Current Spend | Action |
+|---|-------------|--------------|--------------|----------------|---------------|--------|
+```
+
+If no campaigns meet any criteria: output `✅ No campaigns require optimization action today.`
+
+## GUARD
+- Learning phase check: a campaign is considered "in learning phase" until it has spent ≥ 50 × daily_budget OR 7 days have passed (whichever comes first)
+- CPA-related criteria are evaluated against TARGET_CPA — report `CPA: N/A` if target not configured
+- If insufficient data to evaluate a criterion (e.g., < 7 days of data): skip that criterion, do not flag
+- This prompt outputs recommendations only — no automatic or semi-automatic execution is performed

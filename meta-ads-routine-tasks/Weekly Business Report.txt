@@ -1,0 +1,75 @@
+## INPUT
+- Campaign and adset level performance data, date range: last 7 days
+- Ad-level performance data for top and bottom creatives, date range: last 7 days
+- Campaign budget and configuration data for pacing
+
+## PROCESS
+
+### Step 1 — Executive Summary
+Calculate and output:
+- Total spend (7-day sum)
+- Total conversions
+- Overall CPA (cost per result) vs target
+- vs-target variance with color coding: 🟢 on track / 🟡 within 10% / 🔴 >10% off
+
+(Revenue data not available — report N/A if attempted)
+
+### Step 2 — Campaign-Level Breakdown
+For each active campaign output: campaign name, campaign ID, objective, spend, CPA, conversions, status.
+
+### Step 3 — Top/Bottom 3 Ads
+Identify top 3 and bottom 3 ads by CPA. For each output: ad ID, spend, CPA, CTR.
+
+### Step 4 — Audience Performance
+Compare performance across targeting segments using age and gender breakdown. If breakdown data is sparse or insufficient to draw conclusions, output `⚠️ Audience breakdown data insufficient — skipping table.` and skip the table.
+
+### Step 5 — Budget Pacing
+For each campaign: pull the user-set daily budget from campaign_context, compare against actual spend over the 7-day window, and calculate pacing % (actual spend / planned spend × 100). Flag campaigns where pacing is <80% or >120%.
+
+### Step 6 — Key Wins and Issues
+Highlight campaigns where:
+- CPA below target by >20% → key win (lower CPA = better)
+- CPA above target by >30% → key issue
+
+### Step 7 — Next Week Action Items
+List top 3 priority actions for next week based on this week's data.
+
+## OUTPUT
+
+```
+## 📊 EXECUTIVE SUMMARY
+| Metric | Value | Target | Variance |
+|--------|-------|--------|----------|
+
+## 📋 CAMPAIGN BREAKDOWN
+| Campaign ID | Name | Objective | Spend | CPA | Conversions | Status |
+|-------------|------|-----------|-------|------|-----|------------|--------|
+
+## 🏆 TOP 3 ADS (by CPA)
+| Ad ID | Spend | CPA | CTR |
+|-------|-------|------|-----|
+
+## 🔻 BOTTOM 3 ADS (by CPA)
+| Ad ID | Spend | CPA | CTR |
+|-------|-------|------|-----|
+
+## 👥 AUDIENCE PERFORMANCE
+[Age/gender breakdown table or ⚠️ notice if insufficient]
+
+## 💰 BUDGET PACING
+| Campaign | Planned 7d Budget | Actual 7d Spend | Pacing % |
+|----------|---------------------|-----------------|----------|
+
+## 🎉 KEY WINS
+...
+
+## ⚠️ KEY ISSUES
+...
+
+## ➡️ NEXT WEEK ACTION ITEMS
+1. ...
+```
+
+## GUARD
+- If no active campaigns in the period: output `✅ No active campaigns in the past 7 days. Report empty.`
+- Output report in Markdown format directly.

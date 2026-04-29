@@ -1,0 +1,91 @@
+## INPUT
+- Campaign-level performance data, date range: last 30 days
+- Campaign configuration and daily budget
+- Target CPA per campaign: must be provided in CONFIG (no API source — user configures this)
+
+## PROCESS
+
+### Step 1 — Data Collection
+For each active campaign, pull:
+- Total spend (30d)
+- Total conversions
+- CPA (cost per result)
+- Daily budget (convert to display currency for reporting)
+- Campaign age (days since creation)
+
+Calculate CPA vs target delta: `(actual_CPA - target_CPA) / target_CPA`
+
+### Step 2 — Segment Identification
+Rank all campaigns by CPA ascending (lower CPA = better). Segment into:
+- **Top 30%**: campaigns with CPA in the top 30% AND at or below their target CPA
+- **Bottom 30%**: campaigns with CPA in the bottom 30% AND CPA exceeds breakeven threshold (see CONFIG)
+- **Middle 40%**: no action zone
+
+### Step 3 — Exclusion Guards
+Exclude from reallocation analysis if ANY of:
+- Campaign has not exited learning phase (spent <50× daily budget AND age <7 days)
+- Campaign active <14 days
+- Campaign underwent budget change in the last 72 hours
+
+**Exception**: Any campaign with spend >5× daily budget and zero conversions → flag for immediate pause recommendation regardless of segment.
+
+### Step 4 — Reallocation Logic
+For remaining eligible campaigns:
+
+Only recommend reallocation if:
+- Top 30% campaign's current spend is <90% of its daily budget (capacity-constrained)
+- Bottom 30% campaign can give up 20% of its spend without going below `max($10/day, 20% of current daily budget)`
+
+Budget change limits (per month, per campaign):
+- Never decrease below `max($10, 20% of current budget)` — the higher of the two
+- Never increase by more than 20%
+- Never decrease by more than 20%
+
+### Step 5 — Output Table
+
+Output reallocation table with the following columns:
+- Source Campaign (bottom 30%)
+- Dest Campaign (top 30%)
+- Current Budget
+- Recommended Budget
+- Change %
+- CPA (30d)
+- Target CPA
+- vs Target
+- Justification
+
+If no campaigns meet all reallocation criteria:
+→ `✅ No reallocation recommended. All active campaigns within efficient budget range or not capacity-constrained.`
+
+## OUTPUT
+
+```
+## 💼 REALLOCATION TABLE
+
+| Source Campaign | Dest Campaign | Current Budget | Recommended Budget | Change % | CPA (30d) | Target CPA | vs Target | Justification |
+|-----------------|---------------|----------------|---------------------|----------|------------|-------------|----------|--------------|
+
+## ⏸️ PAUSE FLAGS (spend >5× daily budget, zero conversions)
+| Campaign ID | Spend | Daily Budget | Spend/Budget Ratio | Recommendation |
+|-------------|-------|-------------|-------------------|----------------|
+
+## 🚫 EXCLUDED CAMPAIGNS (due to guard criteria)
+| Campaign ID | Reason for Exclusion |
+|-------------|---------------------|
+```
+
+Append: `⏳ Human confirmation required before any budget changes are applied. Once confirmed, agent will execute adjustments via Meta API.`
+
+## GUARD
+- If fewer than 5 campaigns active: skip reallocation logic (insufficient data), output raw metrics only
+- If target CPA is not configured for any campaign: use CPA ranking only (no vs-target delta), note in output
+- Do not auto-execute any budget changes — requires human confirmation
+
+## CONFIG
+Target CPA values must be provided when configuring this routine (no API source). Example:
+```
+TARGET_CPA_BY_CAMPAIGN:
+  campaign_123: 25
+  campaign_456: 40
+  # Add entry for each campaign
+```

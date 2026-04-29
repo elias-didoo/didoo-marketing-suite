@@ -1,0 +1,59 @@
+## INPUT
+- List of active pixels on the account
+- Pixel configuration details
+- Note: Meta Graph API does not expose a "schema" for event parameters (like content_ids or value) per event type; these must be verified manually in Events Manager.
+
+## PROCESS
+
+### Step 1 — Inventory Active Pixels
+List all active pixels associated with the ad account.
+
+### Step 2 — Configuration & CAPI Check
+For each pixel found, retrieve per-pixel configuration to:
+- Confirm if Conversions API (CAPI) is enabled.
+- Identify if the pixel is active and receiving data.
+- Check for basic SKAN (StoreKit Ad Network) integration status if applicable.
+
+### Step 3 — Deduplication & Risk Assessment
+- If both Browser Pixel and CAPI are active: Note that deduplication should be active (requires manual verification of event_id consistency).
+- If only Browser Pixel is active: Flag as MEDIUM severity (risk of data loss due to ad-blockers).
+- If only CAPI is active: Flag for review (standard setup usually includes both).
+
+### Step 4 — Flag Generation
+Identify issues based on available data:
+- Missing CAPI → MEDIUM severity.
+- No pixels found → HIGH severity.
+- SKAN mapping missing for iOS-focused accounts → MEDIUM severity.
+
+### Step 5 — Identify Manual Verification Requirements
+Identify items that the API cannot verify and must be checked in Meta Events Manager:
+- **Parameter Completeness**: Are `content_ids`, `value`, and `currency` firing correctly on standard events (Purchase, AddToCart)?
+- **Match Quality**: Are event match quality scores (EMQ) within the 6.0–10.0 range?
+- **Real-time firing**: Manually navigate the conversion funnel in Events Manager to confirm events fire as expected.
+
+## OUTPUT
+
+```
+## 📦 PIXEL INVENTORY
+
+| Pixel ID | Active? | CAPI Active? | SKAN Configured? | Status |
+|----------|---------|--------------|------------------|--------|
+
+## 🚨 FLAGS REQUIRING ATTENTION
+
+| Pixel ID | Issue | Severity | Recommendation |
+|----------|-------|----------|----------------|
+
+## 🔍 MANUAL VERIFICATION REQUIRED (API Limitation)
+- [ ] **Event Parameters**: Check if `content_ids`, `value`, and `currency` are present for e-commerce events.
+- [ ] **Event Match Quality (EMQ)**: Verify scores in Events Manager (Target: >6.0).
+- [ ] **Deduplication**: Confirm `event_id` is consistent between Browser and Server events.
+- [ ] **Dropped Events**: Check for abnormal event delays or volume drops in Events Manager.
+```
+
+If no pixels found: `✅ No active pixels configured for this account.`
+
+## GUARD
+- Do not fabricate health scores or parameter completeness data.
+- If data is not explicitly returned by `pixel_check`, mark as `UNKNOWN / MANUAL_VERIFY_REQUIRED`.
+- Do not attempt to "test" the pixel by visiting the site; strictly analyze API metadata.
